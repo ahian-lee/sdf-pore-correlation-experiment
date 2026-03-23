@@ -19,6 +19,10 @@ Current experiment runs on the `autofusion` SDF subset, using `5000` matched sam
   Main analysis script for feature extraction, correlation analysis, and baseline regression.
 - `plot_sdf_pore_results.py`
   Plotting script for correlation and performance figures.
+- `plot_prediction_diagnostics.py`
+  Generates true-vs-predicted scatter plots and binned error plots for `PLD/LCD`.
+- `baselines/`
+  Server-oriented baseline scripts for a raw `3D CNN` model and a CIF-derived graph model.
 - `results/`
   CSV and JSON outputs from the `limit=5000` run.
 - `figures/`
@@ -59,6 +63,36 @@ Generate figures:
 python plot_sdf_pore_results.py \
   --input_dir results \
   --output_dir figures
+```
+
+Prediction diagnostics:
+
+```bash
+python plot_prediction_diagnostics.py \
+  --input_csv results/merged_sdf_properties.csv \
+  --output_dir diagnostics \
+  --model extra_trees
+```
+
+## Server Baselines
+
+Raw `3D CNN` baseline:
+
+```bash
+bash baselines/run_3dcnn_baseline.sh
+```
+
+Graph baseline from CIF:
+
+```bash
+bash baselines/run_graph_baseline.sh
+```
+
+Both scripts support environment-variable overrides. Example:
+
+```bash
+LIMIT=10000 DEVICE=cuda OUTPUT_DIR=./baseline_runs/3dcnn_10k \
+  bash baselines/run_3dcnn_baseline.sh
 ```
 
 ## Notes
