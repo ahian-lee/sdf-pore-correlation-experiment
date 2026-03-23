@@ -1,0 +1,17 @@
+{
+  "sdf_dir": "/opt/data/private/moffusion/autofusion/data/resolution_32",
+  "property_csv": "/opt/data/private/moffusion/data/properties/250k_pld_processed.csv",
+  "sdf_count": -1,
+  "property_count": 247744,
+  "matched_count": 5000,
+  "used_count": 5000,
+  "targets": [
+    "PLD",
+    "LCD",
+    "VF",
+    "GCD"
+  ],
+  "limit": 5000,
+  "seed": 0,
+  "test_size": 0.2
+}
