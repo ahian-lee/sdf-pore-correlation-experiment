@@ -14,7 +14,15 @@ LR="${LR:-1e-3}"
 DEVICE="${DEVICE:-cuda}"
 
 mkdir -p "${OUTPUT_DIR}"
+LOG_FILE="${LOG_FILE:-${OUTPUT_DIR}/train.log}"
 
+{
+echo "[INFO] start_time=$(date '+%Y-%m-%d %H:%M:%S')"
+echo "[INFO] script=run_3dcnn_baseline.sh"
+echo "[INFO] sdf_dir=${SDF_DIR}"
+echo "[INFO] property_csv=${PROPERTY_CSV}"
+echo "[INFO] output_dir=${OUTPUT_DIR}"
+echo "[INFO] limit=${LIMIT} epochs=${EPOCHS} batch_size=${BATCH_SIZE} lr=${LR} device=${DEVICE}"
 python "${SCRIPT_DIR}/train_3dcnn_regressor.py" \
   --sdf_dir "${SDF_DIR}" \
   --property_csv "${PROPERTY_CSV}" \
@@ -25,3 +33,5 @@ python "${SCRIPT_DIR}/train_3dcnn_regressor.py" \
   --batch_size "${BATCH_SIZE}" \
   --lr "${LR}" \
   --device "${DEVICE}"
+echo "[INFO] end_time=$(date '+%Y-%m-%d %H:%M:%S')"
+} 2>&1 | tee -a "${LOG_FILE}"

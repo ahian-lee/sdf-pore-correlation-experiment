@@ -15,7 +15,15 @@ DEVICE="${DEVICE:-cuda}"
 CUTOFF="${CUTOFF:-4.5}"
 
 mkdir -p "${OUTPUT_DIR}"
+LOG_FILE="${LOG_FILE:-${OUTPUT_DIR}/train.log}"
 
+{
+echo "[INFO] start_time=$(date '+%Y-%m-%d %H:%M:%S')"
+echo "[INFO] script=run_graph_baseline.sh"
+echo "[INFO] cif_dir=${CIF_DIR}"
+echo "[INFO] property_csv=${PROPERTY_CSV}"
+echo "[INFO] output_dir=${OUTPUT_DIR}"
+echo "[INFO] limit=${LIMIT} epochs=${EPOCHS} batch_size=${BATCH_SIZE} lr=${LR} cutoff=${CUTOFF} device=${DEVICE}"
 python "${SCRIPT_DIR}/train_graph_mpnn_regressor.py" \
   --cif_dir "${CIF_DIR}" \
   --property_csv "${PROPERTY_CSV}" \
@@ -27,3 +35,5 @@ python "${SCRIPT_DIR}/train_graph_mpnn_regressor.py" \
   --lr "${LR}" \
   --cutoff "${CUTOFF}" \
   --device "${DEVICE}"
+echo "[INFO] end_time=$(date '+%Y-%m-%d %H:%M:%S')"
+} 2>&1 | tee -a "${LOG_FILE}"
