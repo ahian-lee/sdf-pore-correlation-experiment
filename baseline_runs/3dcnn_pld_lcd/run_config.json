@@ -1,0 +1,19 @@
+{
+  "sdf_dir": "/opt/data/private/moffusion/autofusion/data/resolution_32",
+  "property_csv": "/opt/data/private/moffusion/data/properties/250k_pld_processed.csv",
+  "output_dir": "/opt/data/private/moffusion/sdf_pore_correlation_repo/baseline_runs/3dcnn_pld_lcd",
+  "targets": [
+    "PLD",
+    "LCD"
+  ],
+  "limit": 5000,
+  "seed": 0,
+  "epochs": 30,
+  "batch_size": 16,
+  "lr": 0.001,
+  "weight_decay": 1e-05,
+  "val_ratio": 0.1,
+  "test_ratio": 0.2,
+  "num_workers": 0,
+  "device": "cuda"
+}

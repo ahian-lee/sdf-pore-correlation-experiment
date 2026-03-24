@@ -1,0 +1,22 @@
+{
+  "cif_dir": "/opt/data/private/moffusion/250k_cif",
+  "property_csv": "/opt/data/private/moffusion/data/properties/250k_pld_processed.csv",
+  "output_dir": "/opt/data/private/moffusion/sdf_pore_correlation_repo/baseline_runs/graph_pld_lcd",
+  "targets": [
+    "PLD",
+    "LCD"
+  ],
+  "limit": 3000,
+  "seed": 0,
+  "epochs": 40,
+  "batch_size": 8,
+  "lr": 0.001,
+  "weight_decay": 1e-05,
+  "cutoff": 4.5,
+  "hidden_dim": 96,
+  "num_layers": 3,
+  "val_ratio": 0.1,
+  "test_ratio": 0.2,
+  "num_workers": 0,
+  "device": "cuda"
+}

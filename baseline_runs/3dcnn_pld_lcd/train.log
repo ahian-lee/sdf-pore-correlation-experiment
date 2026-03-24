@@ -1,0 +1,40 @@
+[INFO] start_time=2026-03-24 11:05:09
+[INFO] script=run_3dcnn_baseline.sh
+[INFO] sdf_dir=/opt/data/private/moffusion/autofusion/data/resolution_32
+[INFO] property_csv=/opt/data/private/moffusion/data/properties/250k_pld_processed.csv
+[INFO] output_dir=/opt/data/private/moffusion/sdf_pore_correlation_repo/baseline_runs/3dcnn_pld_lcd
+[INFO] limit=5000 epochs=30 batch_size=16 lr=1e-3 device=cuda
+epoch=1 train_loss=0.479996 val_loss=0.280595
+epoch=2 train_loss=0.275910 val_loss=0.221761
+epoch=3 train_loss=0.214074 val_loss=0.189148
+epoch=4 train_loss=0.185368 val_loss=0.187209
+epoch=5 train_loss=0.179876 val_loss=0.167437
+epoch=6 train_loss=0.161247 val_loss=0.148366
+epoch=7 train_loss=0.156123 val_loss=0.165304
+epoch=8 train_loss=0.154534 val_loss=0.172358
+epoch=9 train_loss=0.142119 val_loss=0.140403
+epoch=10 train_loss=0.135954 val_loss=0.136612
+epoch=11 train_loss=0.127985 val_loss=0.116516
+epoch=12 train_loss=0.120671 val_loss=0.117267
+epoch=13 train_loss=0.114948 val_loss=0.113751
+epoch=14 train_loss=0.115138 val_loss=0.102654
+epoch=15 train_loss=0.104475 val_loss=0.120774
+epoch=16 train_loss=0.104262 val_loss=0.110606
+epoch=17 train_loss=0.098162 val_loss=0.117275
+epoch=18 train_loss=0.097120 val_loss=0.105902
+epoch=19 train_loss=0.096562 val_loss=0.113407
+epoch=20 train_loss=0.090968 val_loss=0.106203
+epoch=21 train_loss=0.087551 val_loss=0.107696
+epoch=22 train_loss=0.084747 val_loss=0.092774
+epoch=23 train_loss=0.086624 val_loss=0.100019
+epoch=24 train_loss=0.081023 val_loss=0.103011
+epoch=25 train_loss=0.080780 val_loss=0.095865
+epoch=26 train_loss=0.076343 val_loss=0.101256
+epoch=27 train_loss=0.075591 val_loss=0.102394
+epoch=28 train_loss=0.070417 val_loss=0.094189
+epoch=29 train_loss=0.068565 val_loss=0.107574
+epoch=30 train_loss=0.064536 val_loss=0.093273
+target       mae      rmse        r2  spearman
+   PLD  0.484046  0.635246  0.867822  0.922002
+   LCD  0.587459  0.754992  0.936817  0.960028
+[INFO] end_time=2026-03-24 11:14:59
