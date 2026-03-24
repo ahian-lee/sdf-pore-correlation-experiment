@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 CIF_DIR="${CIF_DIR:-/opt/data/private/moffusion/250k_cif}"
 PROPERTY_CSV="${PROPERTY_CSV:-/opt/data/private/moffusion/data/properties/250k_pld_processed.csv}"
-OUTPUT_DIR="${OUTPUT_DIR:-./baseline_runs/graph_pld_lcd}"
+OUTPUT_DIR="${OUTPUT_DIR:-${REPO_DIR}/baseline_runs/graph_pld_lcd}"
 LIMIT="${LIMIT:-3000}"
 EPOCHS="${EPOCHS:-40}"
 BATCH_SIZE="${BATCH_SIZE:-8}"
@@ -13,7 +16,7 @@ CUTOFF="${CUTOFF:-4.5}"
 
 mkdir -p "${OUTPUT_DIR}"
 
-python baselines/train_graph_mpnn_regressor.py \
+python "${SCRIPT_DIR}/train_graph_mpnn_regressor.py" \
   --cif_dir "${CIF_DIR}" \
   --property_csv "${PROPERTY_CSV}" \
   --output_dir "${OUTPUT_DIR}" \
