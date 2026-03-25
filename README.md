@@ -47,6 +47,35 @@ These results support a strong mapping from SDF distribution statistics to MOF p
 - `PLD` tracking high-quantile channel statistics such as `ch0_q95` and `ch0_q75`
 - `LCD` tracking cavity-scale features such as `ch0_max` and `ch0_q95`
 
+## Direct PLD Proxy From SDF
+
+We also tested a geometry-only `PLD proxy` computed directly from the `32^3` SDF without any learned model.
+
+Definition:
+
+- Use `channel 0` of the SDF
+- Threshold the SDF at radius `r`
+- Treat voxels with `SDF >= r` as probe-center accessible
+- Check whether a periodic percolating path still exists
+- Take the largest such `r`, and define `PLD proxy = 2r`
+
+This matches the `pore limiting diameter` definition much better than global statistics like `max(SDF)`.
+
+On a `200`-sample matched subset:
+
+- Raw proxy:
+  - `MAE = 0.797 A`
+  - `RMSE = 0.839 A`
+  - `Bias = -0.797 A`
+  - `Pearson = 0.991`
+  - `Spearman = 0.988`
+- After a simple linear calibration:
+  - `MAE = 0.196 A`
+  - `RMSE = 0.256 A`
+  - `Bias ~ 0`
+
+These results show that even at `32^3`, the direct SDF-derived bottleneck quantity strongly reflects the real `PLD`, though it systematically underestimates the value before calibration.
+
 ## Reproduce
 
 Run the analysis:
@@ -72,6 +101,18 @@ python plot_prediction_diagnostics.py \
   --input_csv results/merged_sdf_properties.csv \
   --output_dir diagnostics \
   --model extra_trees
+```
+
+Direct PLD proxy analysis:
+
+```bash
+python proxy_analysis/compute_periodic_pld_proxy.py \
+  --limit 200 \
+  --output-dir proxy_analysis/results_ch0_200
+
+python proxy_analysis/analyze_periodic_pld_proxy.py \
+  --results-csv proxy_analysis/results_ch0_200/pld_proxy_results.csv \
+  --output-dir proxy_analysis/results_ch0_200/analysis
 ```
 
 ## Server Baselines
