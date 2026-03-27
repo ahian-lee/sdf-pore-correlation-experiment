@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument("--test_ratio", type=float, default=0.2)
     parser.add_argument("--num_workers", type=int, default=0)
     parser.add_argument("--patience", type=int, default=12)
+    parser.add_argument("--log_every_batches", type=int, default=100)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     return parser.parse_args()
 
@@ -43,14 +44,21 @@ def seed_everything(seed: int):
 
 
 def matched_dataframe(sdf_dir: str, property_csv: str, targets: List[str], limit: int, seed: int) -> pd.DataFrame:
+    print("[INFO] loading property csv", flush=True)
     df = pd.read_csv(property_csv, usecols=["name"] + targets).dropna().drop_duplicates("name")
-    matched = []
-    for name in df["name"]:
-        if os.path.exists(os.path.join(sdf_dir, f"{name}.npy")):
-            matched.append(name)
-    out = df[df["name"].isin(matched)].reset_index(drop=True)
+    print(f"[INFO] property rows after dropna/dedup: {len(df)}", flush=True)
+    print("[INFO] indexing available SDF files", flush=True)
+    available = {
+        filename[:-4]
+        for filename in os.listdir(sdf_dir)
+        if filename.endswith(".npy") and not filename.endswith("_occ.npy")
+    }
+    print(f"[INFO] indexed SDF samples: {len(available)}", flush=True)
+    out = df[df["name"].isin(available)].reset_index(drop=True)
+    print(f"[INFO] matched rows before limit: {len(out)}", flush=True)
     if limit > 0 and len(out) > limit:
         out = out.sample(n=limit, random_state=seed).reset_index(drop=True)
+        print(f"[INFO] sampled matched rows with limit={limit}: {len(out)}", flush=True)
     return out
 
 
@@ -197,21 +205,43 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     df = matched_dataframe(args.sdf_dir, args.property_csv, args.targets, args.limit, args.seed)
+    print(f"[INFO] final matched dataframe size: {len(df)}", flush=True)
     train_df, val_df, test_df = split_dataframe(df, args.seed, args.test_ratio, args.val_ratio)
+    print(
+        f"[INFO] split sizes train={len(train_df)} val={len(val_df)} test={len(test_df)}",
+        flush=True,
+    )
 
     y_mean = train_df[args.targets].values.astype(np.float32).mean(axis=0)
     y_std = train_df[args.targets].values.astype(np.float32).std(axis=0) + 1e-8
 
+    print("[INFO] loading first sample to infer input shape", flush=True)
     sample_x = np.load(os.path.join(args.sdf_dir, f"{train_df.iloc[0]['name']}.npy")).astype(np.float32)
+    print(f"[INFO] sample shape={sample_x.shape} dtype={sample_x.dtype}", flush=True)
     model = Strong3DCNN(in_channels=sample_x.shape[0], out_dim=len(args.targets), dropout=args.dropout).to(args.device)
+    print(f"[INFO] model device={args.device}", flush=True)
 
     train_ds = SDFDataset(train_df, args.sdf_dir, args.targets, y_mean, y_std, augment=True)
     val_ds = SDFDataset(val_df, args.sdf_dir, args.targets, y_mean, y_std, augment=False)
     test_ds = SDFDataset(test_df, args.sdf_dir, args.targets, y_mean, y_std, augment=False)
 
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
-    test_loader = DataLoader(test_ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+    loader_kwargs = {
+        "batch_size": args.batch_size,
+        "num_workers": args.num_workers,
+        "pin_memory": args.device.startswith("cuda"),
+    }
+    if args.num_workers > 0:
+        loader_kwargs["persistent_workers"] = True
+
+    train_loader = DataLoader(train_ds, shuffle=True, **loader_kwargs)
+    val_loader = DataLoader(val_ds, shuffle=False, **loader_kwargs)
+    test_loader = DataLoader(test_ds, shuffle=False, **loader_kwargs)
+    print(
+        f"[INFO] dataloaders ready train_batches={len(train_loader)} "
+        f"val_batches={len(val_loader)} test_batches={len(test_loader)} "
+        f"num_workers={args.num_workers}",
+        flush=True,
+    )
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -228,7 +258,8 @@ def main():
     for epoch in range(1, args.epochs + 1):
         model.train()
         train_losses = []
-        for x, y, _ in train_loader:
+        print(f"[INFO] epoch={epoch} train_start", flush=True)
+        for batch_idx, (x, y, _) in enumerate(train_loader, start=1):
             x = x.to(args.device)
             y = y.to(args.device)
             pred = model(x)
@@ -238,9 +269,21 @@ def main():
             nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
             optimizer.step()
             train_losses.append(loss.item())
+            if args.log_every_batches > 0 and (
+                batch_idx == 1 or
+                batch_idx % args.log_every_batches == 0 or
+                batch_idx == len(train_loader)
+            ):
+                running_loss = float(np.mean(train_losses))
+                print(
+                    f"[INFO] epoch={epoch} batch={batch_idx}/{len(train_loader)} "
+                    f"train_loss_running={running_loss:.6f}",
+                    flush=True,
+                )
 
         model.eval()
         val_losses = []
+        print(f"[INFO] epoch={epoch} val_start", flush=True)
         with torch.no_grad():
             for x, y, _ in val_loader:
                 x = x.to(args.device)
@@ -251,7 +294,7 @@ def main():
         val_loss = float(np.mean(val_losses))
         lr_now = float(optimizer.param_groups[0]["lr"])
         history.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss, "lr": lr_now})
-        print(f"epoch={epoch} train_loss={train_loss:.6f} val_loss={val_loss:.6f} lr={lr_now:.6e}")
+        print(f"epoch={epoch} train_loss={train_loss:.6f} val_loss={val_loss:.6f} lr={lr_now:.6e}", flush=True)
         scheduler.step(val_loss)
 
         if val_loss < best_val:
@@ -262,7 +305,7 @@ def main():
         else:
             wait += 1
             if wait >= args.patience:
-                print(f"early_stop epoch={epoch} best_epoch={best_epoch} best_val={best_val:.6f}")
+                print(f"early_stop epoch={epoch} best_epoch={best_epoch} best_val={best_val:.6f}", flush=True)
                 break
 
     model.load_state_dict(best_state)
@@ -274,8 +317,8 @@ def main():
     torch.save(best_state, os.path.join(args.output_dir, "model.pt"))
     with open(os.path.join(args.output_dir, "run_config.json"), "w") as f:
         json.dump(vars(args), f, indent=2)
-    print(f"best_epoch={best_epoch} best_val={best_val:.6f}")
-    print(pd.DataFrame(metrics).to_string(index=False))
+    print(f"best_epoch={best_epoch} best_val={best_val:.6f}", flush=True)
+    print(pd.DataFrame(metrics).to_string(index=False), flush=True)
 
 
 if __name__ == "__main__":

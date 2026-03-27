@@ -13,6 +13,8 @@ BATCH_SIZE="${BATCH_SIZE:-16}"
 LR="${LR:-8e-4}"
 DEVICE="${DEVICE:-cuda}"
 PATIENCE="${PATIENCE:-12}"
+NUM_WORKERS="${NUM_WORKERS:-0}"
+LOG_EVERY_BATCHES="${LOG_EVERY_BATCHES:-100}"
 LOG_FILE="${LOG_FILE:-${OUTPUT_DIR}/train.log}"
 
 mkdir -p "${OUTPUT_DIR}"
@@ -23,7 +25,7 @@ echo "[INFO] script=run_3dcnn_baseline_v2.sh"
 echo "[INFO] sdf_dir=${SDF_DIR}"
 echo "[INFO] property_csv=${PROPERTY_CSV}"
 echo "[INFO] output_dir=${OUTPUT_DIR}"
-echo "[INFO] limit=${LIMIT} epochs=${EPOCHS} batch_size=${BATCH_SIZE} lr=${LR} patience=${PATIENCE} device=${DEVICE}"
+echo "[INFO] limit=${LIMIT} epochs=${EPOCHS} batch_size=${BATCH_SIZE} lr=${LR} patience=${PATIENCE} device=${DEVICE} num_workers=${NUM_WORKERS} log_every_batches=${LOG_EVERY_BATCHES}"
 python "${SCRIPT_DIR}/train_3dcnn_regressor_v2.py" \
   --sdf_dir "${SDF_DIR}" \
   --property_csv "${PROPERTY_CSV}" \
@@ -34,6 +36,8 @@ python "${SCRIPT_DIR}/train_3dcnn_regressor_v2.py" \
   --batch_size "${BATCH_SIZE}" \
   --lr "${LR}" \
   --patience "${PATIENCE}" \
+  --num_workers "${NUM_WORKERS}" \
+  --log_every_batches "${LOG_EVERY_BATCHES}" \
   --device "${DEVICE}"
 echo "[INFO] end_time=$(date '+%Y-%m-%d %H:%M:%S')"
 } 2>&1 | tee -a "${LOG_FILE}"
